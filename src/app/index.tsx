@@ -1,12 +1,48 @@
-import { View, Image, StatusBar } from "react-native";
+import { View, Image, StatusBar, Alert } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
 
 import { Input } from "@/components/input";
 import { colors } from "@/styles/colors";
 import { Button } from "@/components/button";
+import { useState } from "react";
+
+import axios from "axios";
+import { api } from "@/server/api";
+
+import { useBadgeStore } from "@/store/badge-store";
 
 export default function Home() {
+  const [code, setCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const badgeStore = useBadgeStore();  
+ 
+  async function handleAccessCredential() {
+    setIsLoading(true);
+    try {
+
+      const { data } = await api.get(`attendees/${code}/badge`);           
+      badgeStore.save(data.badge)
+
+    } catch(error) {
+      console.log(error)
+      setIsLoading(false);
+
+      if(axios.isAxiosError(error)){
+        if(String(error.response?.data.message).includes('já está cadastrado')){
+          return Alert.alert("Inscrição", "Este e-mail já está cadastrado");
+        }
+      }
+
+      Alert.alert("Inscrição", "Não foi possível fazer a inscrição");
+    }
+  }
+
+  if(badgeStore.data?.checkInURL){
+    return <Redirect href='/ticket' />
+  }
+
   return (
     <View className="flex-1 p-8 bg-green-500 items-center justify-center text-white">
       <StatusBar barStyle="light-content" />
@@ -23,13 +59,13 @@ export default function Home() {
             color={colors.green[200]}
             size={20}
           />
-          <Input.Field placeholder="Código do ingresso" />
+          <Input.Field onChangeText={(value) => {setCode(value)}} placeholder="Código do ingresso" />
         </Input>
 
         <Button
-          isLoading={false}
+          isLoading={isLoading}
           title="acessar credencial"
-          onPress={() => {}}
+          onPress={handleAccessCredential}
         />
 
         <Link
