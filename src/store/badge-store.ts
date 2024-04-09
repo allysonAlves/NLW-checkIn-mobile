@@ -24,11 +24,9 @@ export const useBadgeStore = create(
     (set) => ({
       data: null,
 
-      save: (data: BadgeStore) => set(() => ({ data })),
+      save: (data: BadgeStore) => set(saveBadge(data)),
       remove: () => set(() => ({data: null})),
-      updateAvatar: (uri) => set((state) => ({
-        data: state.data ? {...state.data, image: uri} : state.data
-      }))
+      updateAvatar: (uri) => set(updateAvatar(uri))
     }),
     {
       name: "nlw-unite:badge",
@@ -36,3 +34,16 @@ export const useBadgeStore = create(
     }
   )
 );
+
+const saveBadge = (data: BadgeStore) => (state: any) => {
+  return {data};
+};
+
+const updateAvatar = (uri: string) => (state: any) => {  
+  return {
+    data: {
+      ...state.data, 
+      image: uri
+    }
+  };
+};
